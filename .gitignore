@@ -1,0 +1,4 @@
+cross-arm-unknown-elf
+cross-avr
+cross-avr32-unknown-elf
+cross-powerpc-unknown-linux-uclibc
