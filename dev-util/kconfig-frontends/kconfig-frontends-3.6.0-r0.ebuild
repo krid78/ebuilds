@@ -66,3 +66,8 @@ src_install() {
 	emake DESTDIR="${D}" install || die "Install failed"
 	dodoc ${DOC} || die
 }
+
+pkg_postinst() {
+	elog "config uses 'HLCONF_' as the default symbol prefix. Set the environment"
+	elog "variable CONFIG_ to the prefix to use. Eg.: CONFIG_=\"FOO_\" config ..."
+}
