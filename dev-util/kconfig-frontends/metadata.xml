@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer>
+		<email>krid@tu-chemnitz.eu</email>
+		<name>Daniel Kriesten</name>
+	</maintainer>
+	<upstream>
+		<maintainer>
+			<name>Yann E. Morin</name>
+			<email>yann.morin.1998@free.fr</email>
+		</maintainer>
+	</upstream>
+	<use>
+		<flag name='utils'>install utilities to manage .config files</flag>
+	</use>
+</pkgmetadata>
