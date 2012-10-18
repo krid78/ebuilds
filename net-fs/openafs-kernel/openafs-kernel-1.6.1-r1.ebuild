@@ -39,7 +39,7 @@ pkg_setup() {
 }
 
 src_prepare() {
-	EPATCH_EXCLUDE="012_all_kbuild.patch" \
+	EPATCH_EXCLUDE="012_all_kbuild.patch 016_all_linux-3.5.0-clear_inode.patch 017_all_linux-3.5.0-encode_fh.patch" \
 	EPATCH_SUFFIX="patch" \
 	epatch "${WORKDIR}"/gentoo/patches
 
