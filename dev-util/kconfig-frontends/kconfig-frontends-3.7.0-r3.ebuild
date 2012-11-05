@@ -16,7 +16,6 @@ SRC_URI=""
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~x86"
-PROPERTIES="live"
 IUSE="ncurses qt4 gtk utils"
 
 DEPEND="ncurses? ( sys-libs/ncurses )
