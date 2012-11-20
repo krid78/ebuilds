@@ -18,7 +18,7 @@
 +
  $(LIBNAME):  $(OBJECTS)
 -	libtool --mode=link gcc *.lo -o $(LIBNAME) -rpath $(LIBPATH) -version-info $(VERSION)
-+	libtool --mode=link --tag=CC $(CC) $(LDFLAGS) *.lo -o $(LIBNAME) -rpath $(LIBPATH) -version-info $(VERSION)
++	libtool --mode=link --tag=CC $(CC) $(LDFLAGS) *.lo -o $(LIBNAME) -version-info $(VERSION)
  
  install: $(LIBNAME)
 -	install -d -g $(GROUP) -o $(USER) $(DESTDIR)$(LIBPATH)
