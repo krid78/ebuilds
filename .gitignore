@@ -1,4 +1,6 @@
 cross-arm-unknown-elf
+cross-armv6j-hardfloat-linux-gnueabi
 cross-avr
 cross-avr32-unknown-elf
 cross-powerpc-unknown-linux-uclibc
+metadata/layout.conf
