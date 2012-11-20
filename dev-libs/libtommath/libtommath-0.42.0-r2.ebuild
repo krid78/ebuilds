@@ -25,7 +25,7 @@ src_prepare() {
 }
 
 src_compile() {
-	emake CC=$(tc-getCC) -f makefile.shared IGNORE_SPEED=1 LIBPATH="${EPREFIX}/usr/$(get_libdir)"
+	emake -f makefile.shared CC=$(tc-getCC) IGNORE_SPEED=1 LIBPATH="${EPREFIX}/usr/$(get_libdir)" LT="${ROOT}/usr/bin/libtool"
 }
 
 src_install() {
