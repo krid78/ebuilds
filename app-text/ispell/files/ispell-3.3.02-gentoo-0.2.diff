@@ -1,0 +1,714 @@
+diff -Naur ispell-3.3.02_orig/addons/nextispell/Makefile ispell-3.3.02/addons/nextispell/Makefile
+--- ispell-3.3.02_orig/addons/nextispell/Makefile	2005-04-14 01:54:04.000000000 +0200
++++ ispell-3.3.02/addons/nextispell/Makefile	2007-11-21 16:09:53.000000000 +0100
+@@ -18,7 +18,6 @@
+ 	mv ${NAME} ${NAME}.service/
+ 	if [ -f services ]; then touch services; else cp services.template  services; fi
+ 	mv services ${NAME}.service/
+-	strip ${NAME}.service/${NAME}
+ 
+ ${NAME}: nextispell.m
+ 	if [ -f configure.h ]; then touch configure.h; else cp configure.h.template  configure.h; fi
+diff -Naur ispell-3.3.02_orig/buildhash.c ispell-3.3.02/buildhash.c
+--- ispell-3.3.02_orig/buildhash.c	2005-04-28 02:26:06.000000000 +0200
++++ ispell-3.3.02/buildhash.c	2007-11-21 16:09:53.000000000 +0100
+@@ -112,6 +112,7 @@
+ #include "version.h"
+ #include <ctype.h>
+ #include <sys/stat.h>
++#include <string.h>
+ 
+ int		main P ((int argc, char * argv[]));
+ static void	output P ((void));
+diff -Naur ispell-3.3.02_orig/config.X ispell-3.3.02/config.X
+--- ispell-3.3.02_orig/config.X	2005-05-25 16:13:53.000000000 +0200
++++ ispell-3.3.02/config.X	2007-11-21 16:09:53.000000000 +0100
+@@ -532,6 +532,7 @@
+ 
+ /* Aliases for some routines */
+ #ifdef USG
++#ifndef __GLIBC__
+ #define BCOPY(s, d, n)	memcpy (d, s, n)
+ #define BZERO(d, n)	memset (d, 0, n)
+ #define index strchr
+@@ -540,6 +541,7 @@
+ #define BCOPY(s, d, n)	bcopy (s, d, n)
+ #define BZERO(d, n)	bzero (d, n)
+ #endif
++#endif
+ 
+ /* type given to signal() by signal.h */
+ #ifndef SIGNAL_TYPE
+@@ -716,7 +718,7 @@
+ #ifdef PATH_MAX
+ #define MAXPATHLEN PATH_MAX
+ #else
+-#define MAXPATHLEN 240
++#define MAXPATHLEN 4096
+ #endif
+ #endif
+ 
+@@ -725,7 +727,7 @@
+ #ifdef NAME_MAX
+ #define MAXNAMLEN NAME_MAX
+ #else
+-#define MAXNAMLEN 14
++#define MAXNAMLEN 1024
+ #endif
+ #endif
+ 
+diff -Naur ispell-3.3.02_orig/correct.c ispell-3.3.02/correct.c
+--- ispell-3.3.02_orig/correct.c	2005-04-28 16:46:51.000000000 +0200
++++ ispell-3.3.02/correct.c	2007-11-21 16:11:29.000000000 +0100
+@@ -201,6 +201,8 @@
+  */
+ 
+ #include <ctype.h>
++#include <string.h>
++#include <unistd.h>
+ #include "config.h"
+ #include "ispell.h"
+ #include "proto.h"
+diff -Naur ispell-3.3.02_orig/defmt.c ispell-3.3.02/defmt.c
+--- ispell-3.3.02_orig/defmt.c	2005-04-21 01:16:32.000000000 +0200
++++ ispell-3.3.02/defmt.c	2007-11-21 16:12:15.000000000 +0100
+@@ -198,6 +198,7 @@
+  */
+ 
+ #include <ctype.h>
++#include <string.h>
+ #include "config.h"
+ #include "ispell.h"
+ #include "proto.h"
+diff -Naur ispell-3.3.02_orig/deformatters/Makefile ispell-3.3.02/deformatters/Makefile
+--- ispell-3.3.02_orig/deformatters/Makefile	2005-05-02 01:05:19.000000000 +0200
++++ ispell-3.3.02/deformatters/Makefile	2007-11-21 16:09:53.000000000 +0100
+@@ -96,7 +96,6 @@
+ 	@. ../config.sh; \
+ 	  set -x; \
+ 	  cd $$BINDIR; \
+-	  strip $(PROGRAMS); \
+ 	  chmod 755 $(PROGRAMS)
+ 
+ clean:
+diff -Naur ispell-3.3.02_orig/exp_table.c ispell-3.3.02/exp_table.c
+--- ispell-3.3.02_orig/exp_table.c	2005-06-12 00:44:17.000000000 +0200
++++ ispell-3.3.02/exp_table.c	2007-11-21 16:12:45.000000000 +0100
+@@ -25,6 +25,7 @@
+  * Initial revision
+  */
+ 
++#include <string.h>
+ #include "config.h"
+ #include "ispell.h"
+ #include "msgs.h"
+diff -Naur ispell-3.3.02_orig/fields.c ispell-3.3.02/fields.c
+--- ispell-3.3.02_orig/fields.c	2005-04-14 16:38:23.000000000 +0200
++++ ispell-3.3.02/fields.c	2007-11-21 16:13:16.000000000 +0100
+@@ -43,6 +43,7 @@
+  *
+  */
+ 
++#include <string.h>
+ #include <stdio.h>
+ #include "config.h"
+ #include "fields.h"
+diff -Naur ispell-3.3.02_orig/findaffix.X ispell-3.3.02/findaffix.X
+--- ispell-3.3.02_orig/findaffix.X	2005-04-27 03:18:34.000000000 +0200
++++ ispell-3.3.02/findaffix.X	2007-11-21 16:09:53.000000000 +0100
+@@ -146,13 +146,7 @@
+ # that the new syntax is bad--it's definitely easier to understand.
+ # But that doesn't excuse breaking compatibility.)
+ #
+-# Detect whether sort accepts old-style switches.
+-if sort +0 -1 /dev/null >/dev/null 2>&1
+-then
+-    CRETIN_SORT=false
+-else
+-    CRETIN_SORT=true
+-fi
++CRETIN_SORT=true
+ 
+ #
+ # The following is necessary so that some internationalized versions of
+diff -Naur ispell-3.3.02_orig/ijoin.c ispell-3.3.02/ijoin.c
+--- ispell-3.3.02_orig/ijoin.c	2005-04-14 16:38:23.000000000 +0200
++++ ispell-3.3.02/ijoin.c	2007-11-21 16:09:53.000000000 +0100
+@@ -115,6 +115,7 @@
+  */
+ 
+ #include <stdio.h>
++#include <string.h>
+ #include "config.h"
+ #include "ispell.h"
+ #include "proto.h"
+@@ -169,7 +170,7 @@
+ static int		unpairable1 = 0; /* NZ if -a1 */
+ static int		unpairable2 = 0; /* NZ if -a2 */
+ 
+-extern int	strcmp ();
++/* extern int	strcmp (); */
+ 
+ int main (argc, argv)			/* Join files */
+     int			argc;		/* Argument count */
+diff -Naur ispell-3.3.02_orig/ispell.c ispell-3.3.02/ispell.c
+--- ispell-3.3.02_orig/ispell.c	2005-05-25 16:13:53.000000000 +0200
++++ ispell-3.3.02/ispell.c	2007-11-21 16:09:53.000000000 +0100
+@@ -235,6 +235,7 @@
+ #include <fcntl.h>
+ #endif /* NO_FCNTL_H */
+ #include <sys/stat.h>
++#include <string.h>
+ 
+ static void	usage P ((void));
+ int		main P ((int argc, char * argv[]));
+@@ -277,6 +278,7 @@
+     static char	outbuf[BUFSIZ];
+     int		argno;
+     int		arglen;
++    int         bflag = 0;
+ 
+     Cmd = *argv;
+ 
+@@ -726,12 +728,13 @@
+ 		nodictflag++;
+ 		break;
+ 	    case 'b':
+-		if (arglen > 2)
++		if (arglen > 2 || xflag == 1)
+ 		    usage ();
+ 		xflag = 0;		/* Keep a backup file */
++		bflag = 1;
+ 		break;
+ 	    case 'x':
+-		if (arglen > 2)
++		if (arglen > 2 || bflag == 1)
+ 		    usage ();
+ 		xflag = 1;		/* Don't keep a backup file */
+ 		break;
+diff -Naur ispell-3.3.02_orig/local.h ispell-3.3.02/local.h
+--- ispell-3.3.02_orig/local.h	1970-01-01 01:00:00.000000000 +0100
++++ ispell-3.3.02/local.h	2007-11-21 16:09:53.000000000 +0100
+@@ -0,0 +1,114 @@
++#ifndef LOCAL_H_INCLUDED
++#define LOCAL_H_INCLUDED
++/*
++ * $Id: local.h.linux,v 1.2 2005/04/26 22:40:08 geoff Exp $
++ */
++
++/*
++ * Copyright 2005, Geoff Kuenning, Claremont, CA
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. All modifications to the source code must be clearly marked as
++ *    such.  Binary redistributions based on modified source code
++ *    must be clearly marked as modified versions in the documentation
++ *    and/or other materials provided with the distribution.
++ * 4. The code that causes the 'ispell -v' command to display a prominent
++ *    link to the official ispell Web site may not be removed.
++ * 5. The name of Geoff Kuenning may not be used to endorse or promote
++ *    products derived from this software without specific prior
++ *    written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY GEOFF KUENNING AND CONTRIBUTORS ``AS IS'' AND
++ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED.  IN NO EVENT SHALL GEOFF KUENNING OR CONTRIBUTORS BE LIABLE
++ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++ * SUCH DAMAGE.
++ */
++
++/*
++ * This file is a sample local.h file.  It shows what I believe nearly every
++ * site will want to include in their local.h.  You will probably want to
++ * expand this file;  see "config.X" to learn of #defines that you might
++ * like to add to.
++ */
++
++/*
++ * WARNING WARNING WARNING
++ *
++ * This file is *NOT* a normal C header file!  Although it uses C
++ * syntax and is included in C programs, it is also processed by shell
++ * scripts that are very stupid about format.
++ *
++ * Do not try to use #if constructs to configure this file for more
++ * than one configuration.  Do not place whitespace after the "#" in
++ * "#define".  Do not attempt to disable lines by commenting them out.
++ * Do not use backslashes to reduce the length of long lines.
++ * None of these things will work the way you expect them to.
++ *
++ * WARNING WARNING WARNING
++ */
++
++#define MINIMENU	/* Display a mini-menu at the bottom of the screen */
++#define USG		/* Define on System V or if term.c won't compile */
++#define GENERATE_LIBRARY_PROTOS
++#define	HAS_RENAME
++
++/*
++ * Important directory paths.  If you change MAN45DIR from man5 to
++ * something else, you probably also want to set MAN45SECT and
++ * MAN45EXT (but not if you keep the man pages in section 5 and just
++ * store them in a different place).
++ */
++#define BINDIR	"/usr/bin"
++#define LIBDIR	"/usr/GENTOO_LIBDIR/ispell"
++#define MAN1DIR	"/usr/share/man/man1"
++#define	MAN45DIR "/usr/share/man/man5"
++#define	MAN45EXT ".5"
++
++/*
++ * Place any locally-required #include statements here
++ */
++#define CC             "gcc"
++#define YACC           "bison -y"
++#define TERMLIB                "-lncurses"
++
++#define LANGUAGES "{american,MASTERDICTS=american.xlg,HASHFILES=americanxlg.hash,EXTRADICT=} {british,MASTERDICTS=british.xlg,HASHFILES=britishxlg.hash,EXTRADICT=} {american,MASTERDICTS=american.med+,HASHFILES=americanmed+.hash,EXTRADICT=/usr/share/dict/words} {british,MASTERDICTS=british.med+,HASHFILES=britishmed+.hash,EXTRADICT=}"
++
++/*
++ * Settings
++ */
++
++#define MASKBITS       64
++#define MASTERHASH     "americanmed+.hash"
++#define EGREPCMD       "/bin/grep -E"
++#define LOOK           "/usr/bin/look -df"
++#define MAKE_SORTTMP   "-T ${TMPDIR-/tmp}"
++/*
++#define INPUTWORDLEN   128
++#define MAXAFFIXLEN    32
++#define MAXSTRINGCHARS 128
++#define HAS_RENAME
++#define DEFNOBACKUPFLAG 0
++#define BAKEXT          "~"
++#define DEFTEXFLAG      1
++#define SORTPERSONAL   2000
++#define USESH
++#define COMMANDFORSPACE
++*/
++
++#endif /* LOCAL_H_INCLUDED */
+diff -Naur ispell-3.3.02_orig/local.h.gentoo ispell-3.3.02/local.h.gentoo
+--- ispell-3.3.02_orig/local.h.gentoo	1970-01-01 01:00:00.000000000 +0100
++++ ispell-3.3.02/local.h.gentoo	2007-11-21 16:10:15.000000000 +0100
+@@ -0,0 +1,114 @@
++#ifndef LOCAL_H_INCLUDED
++#define LOCAL_H_INCLUDED
++/*
++ * $Id: local.h.linux,v 1.2 2005/04/26 22:40:08 geoff Exp $
++ */
++
++/*
++ * Copyright 2005, Geoff Kuenning, Claremont, CA
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. All modifications to the source code must be clearly marked as
++ *    such.  Binary redistributions based on modified source code
++ *    must be clearly marked as modified versions in the documentation
++ *    and/or other materials provided with the distribution.
++ * 4. The code that causes the 'ispell -v' command to display a prominent
++ *    link to the official ispell Web site may not be removed.
++ * 5. The name of Geoff Kuenning may not be used to endorse or promote
++ *    products derived from this software without specific prior
++ *    written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY GEOFF KUENNING AND CONTRIBUTORS ``AS IS'' AND
++ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED.  IN NO EVENT SHALL GEOFF KUENNING OR CONTRIBUTORS BE LIABLE
++ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++ * SUCH DAMAGE.
++ */
++
++/*
++ * This file is a sample local.h file.  It shows what I believe nearly every
++ * site will want to include in their local.h.  You will probably want to
++ * expand this file;  see "config.X" to learn of #defines that you might
++ * like to add to.
++ */
++
++/*
++ * WARNING WARNING WARNING
++ *
++ * This file is *NOT* a normal C header file!  Although it uses C
++ * syntax and is included in C programs, it is also processed by shell
++ * scripts that are very stupid about format.
++ *
++ * Do not try to use #if constructs to configure this file for more
++ * than one configuration.  Do not place whitespace after the "#" in
++ * "#define".  Do not attempt to disable lines by commenting them out.
++ * Do not use backslashes to reduce the length of long lines.
++ * None of these things will work the way you expect them to.
++ *
++ * WARNING WARNING WARNING
++ */
++
++#define MINIMENU	/* Display a mini-menu at the bottom of the screen */
++#define USG		/* Define on System V or if term.c won't compile */
++#define GENERATE_LIBRARY_PROTOS
++#define	HAS_RENAME
++
++/*
++ * Important directory paths.  If you change MAN45DIR from man5 to
++ * something else, you probably also want to set MAN45SECT and
++ * MAN45EXT (but not if you keep the man pages in section 5 and just
++ * store them in a different place).
++ */
++#define BINDIR	"/usr/bin"
++#define LIBDIR	"/usr/GENTOO_LIBDIR/ispell"
++#define MAN1DIR	"/usr/share/man/man1"
++#define	MAN45DIR "/usr/share/man/man5"
++#define	MAN45EXT ".5"
++
++/*
++ * Place any locally-required #include statements here
++ */
++#define CC             "gcc"
++#define YACC           "bison -y"
++#define TERMLIB                "-lncurses"
++
++#define LANGUAGES "{american,MASTERDICTS=american.xlg,HASHFILES=americanxlg.hash,EXTRADICT=} {british,MASTERDICTS=british.xlg,HASHFILES=britishxlg.hash,EXTRADICT=} {american,MASTERDICTS=american.med+,HASHFILES=americanmed+.hash,EXTRADICT=/usr/share/dict/words} {british,MASTERDICTS=british.med+,HASHFILES=britishmed+.hash,EXTRADICT=}"
++
++/*
++ * Settings
++ */
++
++#define MASKBITS       64
++#define MASTERHASH     "americanmed+.hash"
++#define EGREPCMD       "/bin/grep -E"
++#define LOOK           "/usr/bin/look -df"
++#define MAKE_SORTTMP   "-T ${TMPDIR-/tmp}"
++/*
++#define INPUTWORDLEN   128
++#define MAXAFFIXLEN    32
++#define MAXSTRINGCHARS 128
++#define HAS_RENAME
++#define DEFNOBACKUPFLAG 0
++#define BAKEXT          "~"
++#define DEFTEXFLAG      1
++#define SORTPERSONAL   2000
++#define USESH
++#define COMMANDFORSPACE
++*/
++
++#endif /* LOCAL_H_INCLUDED */
+diff -Naur ispell-3.3.02_orig/lookup.c ispell-3.3.02/lookup.c
+--- ispell-3.3.02_orig/lookup.c	2005-04-14 23:25:52.000000000 +0200
++++ ispell-3.3.02/lookup.c	2007-11-21 16:13:40.000000000 +0100
+@@ -85,6 +85,9 @@
+  *
+  */
+ 
++#include <sys/types.h>
++#include <unistd.h>
++#include <string.h>
+ #include "config.h"
+ #include "ispell.h"
+ #include "proto.h"
+diff -Naur ispell-3.3.02_orig/makedent.c ispell-3.3.02/makedent.c
+--- ispell-3.3.02_orig/makedent.c	2005-04-21 01:16:32.000000000 +0200
++++ ispell-3.3.02/makedent.c	2007-11-21 16:09:53.000000000 +0100
+@@ -105,6 +105,7 @@
+  *
+  */
+ 
++#include "string.h"
+ #include "config.h"
+ #include "ispell.h"
+ #include "proto.h"
+diff -Naur ispell-3.3.02_orig/Makefile ispell-3.3.02/Makefile
+--- ispell-3.3.02_orig/Makefile	2005-05-25 15:57:02.000000000 +0200
++++ ispell-3.3.02/Makefile	2007-11-21 16:09:53.000000000 +0100
+@@ -261,7 +261,7 @@
+ 
+ programs: buildhash findaffix tryaffix ispell
+ programs: icombine ijoin munchlist
+-programs: subset zapdups
++programs: subset sq unsq zapdups
+ 
+ defmt-programs:
+ 	cd deformatters; $(MAKE) all
+@@ -307,7 +307,6 @@
+ 	@. ./config.sh; \
+ 	  set -x; \
+ 	  cd $$BINDIR; \
+-	  strip ispell$$EXEEXT; \
+ 	  chmod 755 ispell$$EXEEXT
+ 	@. ./config.sh; \
+ 	  set -x; \
+@@ -357,14 +356,14 @@
+ 	@. ./config.sh; \
+ 	  set -x; \
+ 	  $$INSTALL buildhash icombine ijoin munchlist findaffix \
++		sq unsq \
+ 	      tryaffix \
+ 	    $$BINDIR
+ 	@. ./config.sh; \
+ 	  set -x; \
+ 	  cd $$BINDIR; \
+-	  strip buildhash$$EXEEXT icombine$$EXEEXT ijoin$$EXEEXT; \
+ 	  chmod 755 buildhash$$EXEEXT icombine$$EXEEXT ijoin$$EXEEXT \
+-	    munchlist findaffix tryaffix
++	    munchlist findaffix tryaffix sq unsq
+ 	@. ./config.sh; \
+ 	  set -x; \
+ 	  [ -d $$MAN1DIR ]  ||  $(MAKE) NEWDIR=$$MAN1DIR mkdirpath; \
+@@ -383,7 +382,7 @@
+ 	@. ./config.sh; \
+ 	  set -x; \
+ 	  cd $$MAN1DIR; \
+-	  chmod 644 buildhash$$MAN1EXT \
++	  chmod 644 sq$$MAN1EXT buildhash$$MAN1EXT \
+ 	    munchlist$$MAN1EXT findaffix$$MAN1EXT tryaffix$$MAN1EXT
+ 
+ install-languages:
+@@ -400,6 +399,7 @@
+ 
+ munchable:	findaffix tryaffix munchlist buildhash ispell icombine
+ munchable:	ijoin
++munchable:	sq unsq
+ 
+ #
+ #	The following auxiliary dependency is used to make targets in
+diff -Naur ispell-3.3.02_orig/munchlist.X ispell-3.3.02/munchlist.X
+--- ispell-3.3.02_orig/munchlist.X	2005-04-28 16:46:51.000000000 +0200
++++ ispell-3.3.02/munchlist.X	2007-11-21 16:09:53.000000000 +0100
+@@ -266,13 +266,7 @@
+ # that the new syntax is bad--it's definitely easier to understand.
+ # But that doesn't excuse breaking compatibility.)
+ #
+-# Detect whether sort accepts old-style switches.
+-if sort +0 -1 /dev/null >/dev/null 2>&1
+-then
+-    CRETIN_SORT=false
+-else
+-    CRETIN_SORT=true
+-fi
++CRETIN_SORT=true
+ 
+ #
+ # The following is necessary so that some internationalized versions of
+diff -Naur ispell-3.3.02_orig/parse.y ispell-3.3.02/parse.y
+--- ispell-3.3.02_orig/parse.y	2005-04-21 01:16:32.000000000 +0200
++++ ispell-3.3.02/parse.y	2007-11-21 16:11:14.000000000 +0100
+@@ -125,6 +125,7 @@
+  */
+ 
+ #include <ctype.h>
++#include <string.h>
+ #include "config.h"
+ #include "ispell.h"
+ #include "proto.h"
+diff -Naur ispell-3.3.02_orig/proto.h ispell-3.3.02/proto.h
+--- ispell-3.3.02_orig/proto.h	2005-04-27 00:40:08.000000000 +0200
++++ ispell-3.3.02/proto.h	2007-11-21 16:09:53.000000000 +0100
+@@ -303,7 +303,7 @@
+ extern int	wait P ((int * statusp));
+ #else /* NO_STDLIB_H */
+ #include <stdlib.h>
+-#include <string.h>
++/* #include <string.h> */
+ #include <unistd.h>
+ #endif /* NO_STDLIB_H */
+ 
+diff -Naur ispell-3.3.02_orig/sq.c ispell-3.3.02/sq.c
+--- ispell-3.3.02_orig/sq.c	2005-04-14 16:38:23.000000000 +0200
++++ ispell-3.3.02/sq.c	2007-11-21 16:15:25.000000000 +0100
+@@ -59,6 +59,7 @@
+  */
+ 
+ #include <stdio.h>
++#include <string.h>
+ 
+ #ifdef __STDC__
+ #define P(x)	x
+diff -Naur ispell-3.3.02_orig/term.c ispell-3.3.02/term.c
+--- ispell-3.3.02_orig/term.c	2005-04-15 01:11:36.000000000 +0200
++++ ispell-3.3.02/term.c	2007-11-21 16:09:53.000000000 +0100
+@@ -87,13 +87,17 @@
+ #include "proto.h"
+ #include "msgs.h"
+ #ifdef USG
+-#include <termio.h>
++/* #include <termio.h> */
++#include <unistd.h>
++#include <termios.h>
+ #else
+ #ifndef __DJGPP__
+ #include <sgtty.h>
+ #endif
+ #endif
+ #include <signal.h>
++#include <sys/types.h>
++#include <sys/wait.h>
+ 
+ void		ierase P ((void));
+ void		imove P ((int row, int col));
+@@ -166,8 +170,8 @@
+     }
+ 
+ #ifdef USG
+-static struct termio	sbuf;
+-static struct termio	osbuf;
++static struct termios	sbuf;
++static struct termios	osbuf;
+ #else
+ static struct sgttyb	sbuf;
+ static struct sgttyb	osbuf;
+@@ -276,7 +280,8 @@
+ 	(void) fprintf (stderr, TERM_C_NO_BATCH);
+ 	exit (1);
+ 	}
+-    (void) ioctl (0, TCGETA, (char *) &osbuf);
++    /*    (void) ioctl (0, TCGETA, (char *) &osbuf); */
++    tcgetattr(STDIN_FILENO, &osbuf);
+     termchanged = 1;
+ 
+     sbuf = osbuf;
+@@ -285,7 +290,8 @@
+     sbuf.c_iflag &= ~(INLCR | IGNCR | ICRNL);
+     sbuf.c_cc[VMIN] = 1;
+     sbuf.c_cc[VTIME] = 1;
+-    (void) ioctl (0, TCSETAW, (char *) &sbuf);
++    /*    (void) ioctl (0, TCSETAW, (char *) &sbuf); */
++    tcsetattr(STDIN_FILENO, TCSANOW, &sbuf);
+ 
+     uerasechar = osbuf.c_cc[VERASE];
+     ukillchar = osbuf.c_cc[VKILL];
+@@ -373,7 +379,7 @@
+ 	if (te)
+ 	    tputs (te, 1, iputch);
+ #ifdef USG
+-	(void) ioctl (0, TCSETAW, (char *) &osbuf);
++	tcsetattr(STDIN_FILENO, TCSANOW, &osbuf);
+ #else
+ 	(void) ioctl (0, TIOCSETP, (char *) &osbuf);
+ #ifdef TIOCSLTC
+@@ -394,7 +400,7 @@
+ 	if (te)
+ 	    tputs (te, 1, iputch);
+ #ifdef USG
+-	(void) ioctl (0, TCSETAW, (char *) &osbuf);
++	tcsetattr(STDIN_FILENO, TCSANOW, &osbuf);
+ #else
+ 	(void) ioctl (0, TIOCSETP, (char *) &osbuf);
+ #ifdef TIOCSLTC
+@@ -413,7 +419,7 @@
+     if (termchanged)
+ 	{
+ #ifdef USG
+-	(void) ioctl (0, TCSETAW, (char *) &sbuf);
++	tcsetattr(STDIN_FILENO, TCSANOW, &sbuf);
+ #else
+ 	(void) ioctl (0, TIOCSETP, (char *) &sbuf);
+ #ifdef TIOCSLTC
+@@ -481,7 +487,7 @@
+     argv[i] = NULL;
+ 
+ #ifdef USG
+-    (void) ioctl (0, TCSETAW, (char *) &osbuf);
++    tcsetattr(STDIN_FILENO, TCSANOW, &osbuf);
+ #else
+     (void) ioctl (0, TIOCSETP, (char *) &osbuf);
+ #ifdef TIOCSLTC
+@@ -527,7 +533,7 @@
+ #endif
+ 
+ #ifdef USG
+-    (void) ioctl (0, TCSETAW, (char *) &sbuf);
++    tcsetattr(STDIN_FILENO, TCSANOW, &sbuf);
+ #else
+     (void) ioctl (0, TIOCSETP, (char *) &sbuf);
+ #ifdef TIOCSLTC
+@@ -563,7 +569,7 @@
+ #endif
+ 
+ #ifdef USG
+-    (void) ioctl (0, TCSETAW, (char *) &osbuf);
++    tcsetattr(STDIN_FILENO, TCSANOW, &osbuf);
+ #else
+     (void) ioctl (0, TIOCSETP, (char *) &osbuf);
+ #ifdef TIOCSLTC
+@@ -611,7 +617,7 @@
+ #endif
+ 
+ #ifdef USG
+-    (void) ioctl (0, TCSETAW, (char *) &sbuf);
++    tcsetattr(STDIN_FILENO, TCSANOW, &sbuf);
+ #else
+     (void) ioctl (0, TIOCSETP, (char *) &sbuf);
+ #ifdef TIOCSLTC
+diff -Naur ispell-3.3.02_orig/tgood.c ispell-3.3.02/tgood.c
+--- ispell-3.3.02_orig/tgood.c	2005-04-14 16:38:23.000000000 +0200
++++ ispell-3.3.02/tgood.c	2007-11-21 16:14:03.000000000 +0100
+@@ -120,6 +120,7 @@
+  */
+ 
+ #include <ctype.h>
++#include <string.h>
+ #include "config.h"
+ #include "ispell.h"
+ #include "msgs.h"
+diff -Naur ispell-3.3.02_orig/tree.c ispell-3.3.02/tree.c
+--- ispell-3.3.02_orig/tree.c	2005-04-14 16:43:46.000000000 +0200
++++ ispell-3.3.02/tree.c	2007-11-21 16:14:27.000000000 +0100
+@@ -93,6 +93,7 @@
+  */
+ 
+ #include <ctype.h>
++#include <string.h>
+ #include <errno.h>
+ #include "config.h"
+ #include "ispell.h"
+diff -Naur ispell-3.3.02_orig/unsq.c ispell-3.3.02/unsq.c
+--- ispell-3.3.02_orig/unsq.c	2005-04-14 16:38:23.000000000 +0200
++++ ispell-3.3.02/unsq.c	2007-11-21 16:15:42.000000000 +0100
+@@ -59,6 +59,7 @@
+  */
+ 
+ #include <stdio.h>
++#include <string.h>
+ #include "msgs.h"
+ 
+ #ifdef __STDC__
+diff -Naur ispell-3.3.02_orig/xgets.c ispell-3.3.02/xgets.c
+--- ispell-3.3.02_orig/xgets.c	2005-04-14 16:38:23.000000000 +0200
++++ ispell-3.3.02/xgets.c	2007-11-21 16:14:45.000000000 +0100
+@@ -69,6 +69,7 @@
+  *
+  */
+ 
++#include <string.h>
+ #include "config.h"
+ #include "ispell.h"
+ #include "proto.h"
