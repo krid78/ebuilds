@@ -30,6 +30,7 @@ src_unpack() {
 	epatch "${FILESDIR}/${P}-gentoo-${PATCH_VER}.diff"
 	epatch "${FILESDIR}/${P}-fix-getline.diff"
 
+	cd "${S}"
 	sed -i -e "s:GENTOO_LIBDIR:$(get_libdir):" local.h.gentoo || die "setting
 	libdir failed"
 	cp local.h.gentoo local.h
@@ -66,7 +67,8 @@ src_install() {
 	rmdir "${D}"/usr/share/info
 
 	dodoc Contributors README WISHES || die "installing docs failed"
-	dosed "${D}"/usr/share/man/man1/ispell.1 || die "dosed failed"
+	#dosed "${D}"/usr/share/man/man1/ispell.1 || die "dosed failed"
+	dosed /usr/share/man/man1/ispell.1 || die "dosed failed"
 }
 
 pkg_postinst() {
