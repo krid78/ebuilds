@@ -19,7 +19,7 @@ PROPERTIES="live"
 IUSE="ncurses qt4 gtk utils"
 
 DEPEND="ncurses? ( sys-libs/ncurses )
-        qt4? ( x11-libs/qt-core )
+        qt4? ( dev-qt/qtcore )
         gtk? ( x11-libs/gtk+:2 )
 		"
 RDEPEND="${DEPEND}"
