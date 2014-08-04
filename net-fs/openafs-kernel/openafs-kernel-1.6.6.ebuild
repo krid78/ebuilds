@@ -39,10 +39,9 @@ pkg_setup() {
 }
 
 src_prepare() {
-	EPATCH_EXCLUDE="012_all_kbuild.patch" \
+	EPATCH_EXCLUDE="012_all_kbuild.patch 020_all_fbsd.patch" \
 	EPATCH_SUFFIX="patch" \
 	epatch "${WORKDIR}"/gentoo/patches
-	epatch "${FILESDIR}"/${P/-kernel/}-kernel-3.11-{1..2}.patch
 	epatch_user
 
 	# packaging is f-ed up, so we can't run eautoreconf
