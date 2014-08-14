@@ -22,7 +22,7 @@ KEYWORDS="~amd64 ~sparc ~x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux"
 
 IUSE="doc kerberos pam"
 
-RDEPEND="|| ( ~net-fs/openafs-kernel-${PV} !net-fs/openafs-kernel )
+RDEPEND="~net-fs/openafs-kernel-${PV}
 	sys-libs/ncurses
 	pam? ( sys-libs/pam )
 	kerberos? ( virtual/krb5 )"
@@ -115,9 +115,11 @@ src_install() {
 	newconfd "${CONFDIR}"/openafs-client openafs-client || die
 	newinitd "${SCRIPTDIR}"/openafs-server openafs-server || die
 	newconfd "${CONFDIR}"/openafs-server openafs-server || die
-	systemd_dotmpfilesd "${FILESDIR}"/tmpfiles.d/openafs-client.conf
-	systemd_dounit "${FILESDIR}"/openafs-client.service
-	systemd_dounit "${FILESDIR}"/openafs-server.service
+	if use systemd; then
+		systemd_dotmpfilesd "${FILESDIR}"/tmpfiles.d/openafs-client.conf
+		systemd_dounit "${FILESDIR}"/openafs-client.service
+		systemd_dounit "${FILESDIR}"/openafs-server.service
+	fi
 
 	# used directories: client
 	keepdir /etc/openafs
